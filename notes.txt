@@ -1,0 +1,2 @@
+d pubsub subscriptions pull --auto-ack projects/pi-iot-project-235918/subscriptions/events
+

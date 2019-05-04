@@ -24,6 +24,7 @@ GPIO.setmode(GPIO.BCM)  # set GPIO pin mode to BCM numbering
 def weight_val():
     hx = HX711(dout_pin=5, pd_sck_pin=6)  # create an object
     val = hx.get_raw_data_mean()
+    val = int((val + 206000.)/(-961.))
     print(val)  # get raw data reading from hx711
     GPIO.cleanup()
     return val
@@ -198,17 +199,17 @@ def main():
     mqtt_topic = '/devices/{}/events'.format(args.device_id)
 
     # Get the Raspberry Pi's processor temperature. 
-    temp = 40
+    #temp = 40
     temp = weight_val()
-
+    #while (True):
     payload = '{}/{} Time {} temperature {}'.format(
-            args.registry_id, args.device_id, strftime("%Y-%m-%d %H:%M:%S", gmtime()), temp)
+                args.registry_id, args.device_id, strftime("%Y-%m-%d %H:%M:%S", gmtime()), temp)
     print('Publishing message {}'.format(payload))
     # Publish "payload" to the MQTT topic. qos=1 means at least once
     # delivery. Cloud IoT Core also supports qos=0 for at most once
     # delivery.
     client.publish(mqtt_topic, payload, qos=1)
-
+    #    time.sleep(60 * 15)
     # End the network loop and finish.
     client.loop_stop()
     print('Finished.')

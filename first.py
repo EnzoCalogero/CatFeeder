@@ -209,6 +209,10 @@ def main():
     payload=payload + '"val":"{}"'.format( weight)
     payload=payload + '}'
 
+    temp = weight_val()
+    #while (True):
+    payload = '{}/{} Time {} temperature {}'.format(
+                args.registry_id, args.device_id, strftime("%Y-%m-%d %H:%M:%S", gmtime()), temp)
     print('Publishing message {}'.format(payload))
     # Publish "payload" to the MQTT topic. qos=1 means at least once
     # delivery. Cloud IoT Core also supports qos=0 for at most once

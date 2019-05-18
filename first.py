@@ -17,7 +17,7 @@ import paho.mqtt.client as mqtt
 
 import RPi.GPIO as GPIO  # import GPIO
 from hx711 import HX711  # import the class HX711
-
+from gpiozero import LightSensor, Buzzer
 GPIO.setmode(GPIO.BCM)  # set GPIO pin mode to BCM numbering
 
 
@@ -28,6 +28,12 @@ def weight_val():
     print(val)  # get raw data reading from hx711
     GPIO.cleanup()
     return val
+
+
+def light_val():
+    ldr = LightSensor(4)  # alter if using a different pin
+    return ldr.value
+
 
 ##########################################################
 # The initial backoff time after a disconnection occurs, in seconds.
@@ -208,18 +214,35 @@ def main():
     payload=payload + '"sensor":"{}",'.format("Weight")
     payload=payload + '"val":{}'.format( weight)
     payload=payload + '}'
-
+    
     #temp = weight_val()
     #while (True):
     #payload = '{}/{} Time {} temperature {}'.format(
     #            args.registry_id, args.device_id, strftime("%Y-%m-%d %H:%M:%S", gmtime()), temp)
-    print('Publishing message {}'.format(payload))
+    print('Publishing message for weight {}'.format(payload))
     # Publish "payload" to the MQTT topic. qos=1 means at least once
     # delivery. Cloud IoT Core also supports qos=0 for at most once
     # delivery.
     client.publish(mqtt_topic, payload, qos=1)
     #    time.sleep(60 * 15)
     # End the network loop and finish.
+    
+    ##################
+    #  light section #
+    ##################
+    light=light_val()
+    
+    payload='{'
+    payload=payload + '"device":"{}",'.format(args.device_id)
+    payload=payload + '"time":"{}",'.format(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+    payload=payload + '"sensor":"{}",'.format("Light")
+    payload=payload + '"val":{}'.format(light)
+    payload=payload + '}'
+   
+    print('Publishing message for light {}'.format(payload))
+    client.publish(mqtt_topic, payload, qos=1)
+
+
     client.loop_stop()
     print('Finished.')
 

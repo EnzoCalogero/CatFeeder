@@ -260,7 +260,7 @@ def main():
     #################
     # temp          #
     #################
-    temp, hum=temp_humid_val()
+    hum, temp = temp_humid_val()
 
    
     payload='{'

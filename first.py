@@ -18,7 +18,16 @@ import paho.mqtt.client as mqtt
 import RPi.GPIO as GPIO  # import GPIO
 from hx711 import HX711  # import the class HX711
 from gpiozero import LightSensor, Buzzer
+import dht11
 GPIO.setmode(GPIO.BCM)  # set GPIO pin mode to BCM numbering
+GPIO.cleanup()
+
+def temp_humid_val():
+    instance = dht11.DHT11(pin=17)
+    result = instance.read()
+    temp = result.temperature
+    hump = result.humidity
+    return (temp, hump)
 
 
 def weight_val():
@@ -26,7 +35,7 @@ def weight_val():
     val = hx.get_raw_data_mean()
     val = int((val + 206000.)/(-961.))
     print(val)  # get raw data reading from hx711
-    GPIO.cleanup()
+    #GPIO.cleanup()
     return val
 
 
@@ -241,9 +250,41 @@ def main():
    
     print('Publishing message for light {}'.format(payload))
     client.publish(mqtt_topic, payload, qos=1)
+    #################
+    # temp          #
+    #################
+    temp, hum=temp_humid_val()
+
+   
+    payload='{'
+    payload=payload + '"device":"{}",'.format(args.device_id)
+    payload=payload + '"time":"{}",'.format(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+    payload=payload + '"sensor":"{}",'.format("Temperature")
+    payload=payload + '"val":{}'.format( temp)
+    payload=payload + '}'
+
+    print('Publishing message for temperature {}'.format(payload))
+
+    client.publish(mqtt_topic, payload, qos=1)
+    #################
+    # humidy        #
+    #################
 
 
+    payload='{'
+    payload=payload + '"device":"{}",'.format(args.device_id)
+    payload=payload + '"time":"{}",'.format(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+    payload=payload + '"sensor":"{}",'.format("Humidity")
+    payload=payload + '"val":{}'.format( hum)
+    payload=payload + '}'
+
+   
+    print('Publishing message for humidy {}'.format(payload))
+    
+    client.publish(mqtt_topic, payload, qos=1)
     client.loop_stop()
+
+
     print('Finished.')
 
 

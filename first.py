@@ -18,17 +18,24 @@ import paho.mqtt.client as mqtt
 import RPi.GPIO as GPIO  # import GPIO
 from hx711 import HX711  # import the class HX711
 from gpiozero import LightSensor, Buzzer
-import dht11
+#import dht11
+import Adafruit_DHT
 GPIO.setmode(GPIO.BCM)  # set GPIO pin mode to BCM numbering
-GPIO.cleanup()
+#GPIO.cleanup()
 
-def temp_humid_val():
+def temp_humid_val_old():
     instance = dht11.DHT11(pin=17)
     result = instance.read()
     temp = result.temperature
     hump = result.humidity
     return (temp, hump)
 
+def temp_humid_val():
+    pin = 17
+    sensor = Adafruit_DHT
+    sensor = Adafruit_DHT.DHT11
+    humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
+    return (humidity, temperature)
 
 def weight_val():
     hx = HX711(dout_pin=5, pd_sck_pin=6)  # create an object

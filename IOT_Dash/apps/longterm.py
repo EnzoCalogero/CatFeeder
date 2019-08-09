@@ -1,4 +1,5 @@
 from datetime import datetime as dt
+
 import dash
 import dash_core_components as dcc
 import dash_daq as daq
@@ -6,41 +7,41 @@ import dash_html_components as html
 import pandas as pd
 
 from app import app
+
 ################################
 ## Data seasures Section  ######ß
 ################################
 
-#all = pd.read_csv('data/improved.csv')
+# all = pd.read_csv('data/improved.csv')
 improved = pd.read_csv('data/improved.csv')
 
-
-#df = all[all.Day == maxDay]
+# df = all[all.Day == maxDay]
 
 ################################
 ## Data Quality Section   ######
 ################################
 
-#daily frequency
+# daily frequency
 interval_min = 5.4  # minutes between measurements
 total_measure_daily = (60 * 24 / interval_min) - 2
 
 df_ = pd.DataFrame({'Count': improved.groupby('Day')['Hour'].count(),
-                   'DailyEaten': improved.groupby('Day')['eaten_cum_Day'].max(),
-                   'DailyGiven': improved.groupby('Day')['given_cum_Day'].max(),
+                    'DailyEaten': improved.groupby('Day')['eaten_cum_Day'].max(),
+                    'DailyGiven': improved.groupby('Day')['given_cum_Day'].max(),
 
-                   'Massimo': improved.groupby('Day')['Hour'].max(),
-                   'Minimo': improved.groupby('Day')['Hour'].min(),
-                   'CoverRatio': improved.groupby('Day')['Hour'].count() / total_measure_daily
-                   })
+                    'Massimo': improved.groupby('Day')['Hour'].max(),
+                    'Minimo': improved.groupby('Day')['Hour'].min(),
+                    'CoverRatio': improved.groupby('Day')['Hour'].count() / total_measure_daily
+                    })
 # Dataquality['Day']=Dataquality.index
 df_ = df_.reset_index()
 df_['Date'] = pd.to_datetime(df_.Day, infer_datetime_format=True)
 
-df_=df_[df_.Day > '2019-07-12']
+df_ = df_[df_.Day > '2019-07-12']
 
 # removing last day
-oggi= dt.today().strftime("%Y-%m-%d")
-df_=df_[df_.Day < oggi]
+oggi = dt.today().strftime("%Y-%m-%d")
+df_ = df_[df_.Day < oggi]
 
 df_['CoverRatio'].loc[(df_['CoverRatio'] > 1.0)] = 1.0
 
@@ -51,9 +52,9 @@ maxDay = df_['Date'].max()
 ##     Layout Section     ######
 ################################
 
-#external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+# external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-#app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+# app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 layout = html.Div(children=[
     html.H1(children='Xander... the Cat!!!!     .....Long term.....'),
@@ -62,15 +63,31 @@ layout = html.Div(children=[
         Long Term Analysis!!!.
     '''),
 
-    dcc.DatePickerRange(
-        id='my-date-picker-range',
-        min_date_allowed=minDay,
-        max_date_allowed=maxDay,
-        start_date=minDay,
-        end_date=maxDay
-    ),
-    html.Div(id='output-container-date-picker-range'),
-##################################### Next Line  #############################
+    ##################################### Next Line  #############################
+
+    html.Div([
+        daq.Knob(
+            id='my-knob',
+            label="Data Quality, Cover Ratio",
+            max=100,
+            value=90,
+            scale={'start': 0, 'labelInterval': 10, 'interval': 5},
+            color={"gradient": True, "ranges": {"red": [0, 50], "yellow": [50, 89], "green": [89, 100]}}
+        ),
+        html.Div(id='knob-output')
+    ], style={'width': '50%', 'display': 'inline-block'}),
+    html.Div([
+        dcc.DatePickerRange(
+            id='my-date-picker-range',
+            min_date_allowed=minDay,
+            max_date_allowed=maxDay,
+            start_date=minDay,
+            end_date=maxDay),
+
+        html.Div(id='output-container-date-picker-range'),
+
+    ], style={'width': '50%', 'display': 'inline-block'}),
+    ##################################### Next Line  #############################
 
     html.Div([
         daq.LEDDisplay(
@@ -113,18 +130,31 @@ layout = html.Div(children=[
 ])
 
 
+# Call backs Data quality...
+
+
+@app.callback(
+    dash.dependencies.Output('knob-output', 'children'),
+    [dash.dependencies.Input('my-knob', 'value')])
+def update_output(value):
+    return 'The Cover Ratio used has to be >= {}.'.format(value)
+
+
 # Graph callbacks...
 
 @app.callback(
     dash.dependencies.Output('graph_eaten', 'figure'),
     [dash.dependencies.Input('my-date-picker-range', 'start_date'),
-     dash.dependencies.Input('my-date-picker-range', 'end_date')])
-def update_output(start_date, end_date):
+     dash.dependencies.Input('my-date-picker-range', 'end_date'),
+     dash.dependencies.Input('my-knob', 'value')])
+def update_output(start_date, end_date, cover_ratio):
     print("start date: {}".format(start_date))
     print("end date: {}".format(end_date))
+    cover_ratio = cover_ratio / 100.
+    print(cover_ratio)
 
-
-    temp=df_[(df_['Day'] >= start_date) & (df_['Day'] <= end_date)]
+    temp = df_[(df_['Day'] >= start_date) & (df_['Day'] <= end_date)]
+    temp = temp[temp['CoverRatio'] >= cover_ratio]
     return {
         'data': [{
             'type': 'scatter',
@@ -143,17 +173,20 @@ def update_output(start_date, end_date):
 @app.callback(
     dash.dependencies.Output('graph_given', 'figure'),
     [dash.dependencies.Input('my-date-picker-range', 'start_date'),
-     dash.dependencies.Input('my-date-picker-range', 'end_date')
+     dash.dependencies.Input('my-date-picker-range', 'end_date'),
+     dash.dependencies.Input('my-knob', 'value')
      ])
-def update_output(start_date, end_date):
+def update_output(start_date, end_date, cover_ratio):
+    cover_ratio = cover_ratio / 100.
     temp = df_[(df_['Day'] >= start_date) & (df_['Day'] <= end_date)]
+    temp = temp[temp['CoverRatio'] >= cover_ratio]
 
     return {
         'data': [{
             'type': 'scatter',
             'y': temp['DailyGiven'],
             'x': temp['Day'],
-            'mode':  'lines+markers',
+            'mode': 'lines+markers',
             'name': 'GivenperDay',
         },
         ],
@@ -175,7 +208,7 @@ def update_output1(start_date, end_date):
             'type': 'scatter',
             'y': temp['CoverRatio'],
             'x': temp['Day'],
-            'mode':  'lines+markers',
+            'mode': 'lines+markers',
             'name': 'given_cum_Day',
         },
         ],
@@ -196,7 +229,7 @@ def update_output2(start_date, end_date):
 
     eatenDay_average = temp['DailyEaten'].mean()
 
-    return str(round(eatenDay_average,1))
+    return str(round(eatenDay_average, 1))
 
 
 @app.callback(
@@ -208,8 +241,8 @@ def update_output2(start_date, end_date):
 
     givenDay_average = temp['DailyGiven'].mean()
 
-    return str(round(givenDay_average,1))
+    return str(round(givenDay_average, 1))
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
-

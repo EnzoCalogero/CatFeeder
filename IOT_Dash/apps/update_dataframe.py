@@ -14,12 +14,14 @@ improved=pd.read_csv('../data/improved.csv')
 last_input=improved['time'].max()
 last_input=last_input[:10]+" 00:00:00"
 
+device="catfeeder"
 query = '''
 SELECT time, val FROM `pi-iot-project-235918.home.sensors` 
 where sensor = "Weight"
+and device = '{}' 
 and time >'{}'
 order by time desc 
-'''.format(last_input)
+'''.format(device, last_input)
 
 print(query)
 

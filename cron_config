@@ -1,0 +1,2 @@
+05 1 * * * /home/enzo_calogero/CatFeeder/IOT_Dash/dataflow.sh >> /home/enzo_calogero/log3.txt 2>&1
+45 1 * * * /usr/bin/sudo /home/enzo_calogero/CatFeeder/IOT_Dash/dataflow2.sh >> /home/enzo_calogero/log.txt 2>&1

@@ -3,12 +3,12 @@ import pandas as pd
 from pandas.io import gbq
 from google.cloud import bigquery
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "data/pi-iot-project.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/enzo_calogero/CatFeeder/IOT_Dash/apps/data/pi-iot-project.json"
 
 # Instantiates a client
 bigquery_client = bigquery.Client()
 
-improved=pd.read_csv('../data/improved.csv')
+improved=pd.read_csv('/home/enzo_calogero/CatFeeder/IOT_Dash/data/improved.csv')
 #print(improved_old.tail())
 
 last_input=improved['time'].max()
@@ -83,4 +83,4 @@ for day in Days:
 
 print(improved.head())
 
-improved.to_csv('../data/improved.csv', index=False)
+improved.to_csv('/home/enzo_calogero/CatFeeder/IOT_Dash/data/improved.csv', index=False)

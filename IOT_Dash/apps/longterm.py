@@ -9,7 +9,7 @@ import pandas as pd
 from app import app
 
 ################################
-## Data seasures Section  ######ß
+## Data seasures Section  ######
 ################################
 
 # all = pd.read_csv('data/improved.csv')

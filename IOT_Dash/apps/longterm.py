@@ -10,7 +10,7 @@ import numpy as np
 from app import app
 
 ################################
-## Data seasures Section  ######ß
+## Data feasures Section  ######
 ################################
 
 # all = pd.read_csv('data/improved.csv')

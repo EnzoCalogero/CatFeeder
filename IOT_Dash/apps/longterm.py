@@ -5,11 +5,12 @@ import dash_core_components as dcc
 import dash_daq as daq
 import dash_html_components as html
 import pandas as pd
-
+import numpy as np
+#from scipy import signal
 from app import app
 
 ################################
-## Data seasures Section  ######
+## Data seasures Section  ######ß
 ################################
 
 # all = pd.read_csv('data/improved.csv')
@@ -47,6 +48,23 @@ df_['CoverRatio'].loc[(df_['CoverRatio'] > 1.0)] = 1.0
 
 minDay = df_['Date'].min()
 maxDay = df_['Date'].max()
+
+################################
+##   Functions Section    ######
+################################
+def smoothTriangle(data, degree=5): # added 5 as smoother degree
+    triangle = np.concatenate((np.arange(degree + 1), np.arange(degree)[::-1]))  # up then down
+    smoothed = []
+
+    for i in range(degree, len(data) - degree * 2):
+        point = data[i:i + len(triangle)] * triangle
+        smoothed.append(np.sum(point) / np.sum(triangle))
+    # Handle boundaries
+    smoothed = [smoothed[0]] * int(degree + degree / 2) + smoothed
+    while len(smoothed) < len(data):
+        smoothed.append(smoothed[-1])
+    return smoothed
+
 
 ################################
 ##     Layout Section     ######
@@ -155,6 +173,8 @@ def update_output(start_date, end_date, cover_ratio):
 
     temp = df_[(df_['Day'] >= start_date) & (df_['Day'] <= end_date)]
     temp = temp[temp['CoverRatio'] >= cover_ratio]
+
+
     return {
         'data': [{
             'type': 'scatter',
@@ -162,7 +182,14 @@ def update_output(start_date, end_date, cover_ratio):
             'x': temp['Day'],
             'mode': 'lines+markers',
             'name': 'EatenperDay',
-        },
+        },   #  just added second element... in the list...
+            {
+                'type': 'scatter',
+                'y': smoothTriangle(temp['DailyEaten']),
+                'x': temp['Day'],
+                'mode': 'lines+markers',
+                'name': 'EatenperDay-average',
+            }
         ],
         'layout': {
             'title': "Daily Eaten"
@@ -189,6 +216,13 @@ def update_output(start_date, end_date, cover_ratio):
             'mode': 'lines+markers',
             'name': 'GivenperDay',
         },
+            {
+                'type': 'scatter',
+                'y': smoothTriangle(temp['DailyGiven']),
+                'x': temp['Day'],
+                'mode': 'lines+markers',
+                'name': 'DailyGiven-average',
+            }
         ],
         'layout': {
             'title': "Daily Given "

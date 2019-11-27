@@ -8,10 +8,10 @@ gcloud dataflow jobs run test01 --gcs-location "gs://dataflow-templates/latest/P
 gcloud dataflow jobs list --status=active
 
 # from listextract the dataflow id job.
-id_job=$(gcloud dataflow jobs list --status=active |sed -n -e '2,2p' |grep -Eo '^[^ ]+')
+id_job=$(gcloud dataflow jobs list --status=active --region=us-central1-a |sed -n -e '2,2p' |grep -Eo '^[^ ]+')
 
 # wait for 30 minutes sec 30*60=1800
-sleep 1800
+sleep 900
 
 # dfrain the dataflow job.
 gcloud dataflow jobs drain $id_job
